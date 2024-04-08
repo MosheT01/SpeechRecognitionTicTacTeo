@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tic Tac Toe</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 0;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      #board {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 20px;
+        width: 330px; /* Increased width to accommodate the borders */
+        margin: 0 auto; /* Set margin auto for left and right to center horizontally */
+        background-color: #333;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-around;
+        flex: 1; /* Let each row expand to fill the available space */
+      }
+
+      .cell {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        background-color: #ddd;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+        min-width: 90px; /* Minimum width for the cell */
+        min-height: 50px; /* Minimum height for the cell */
+        padding: 10px; /* Padding for the cell content */
+        flex: 1; /* Let each cell expand to fill the available space */
+        margin: 1px;
+      }
+
+      .cell:hover {
+        background-color: #ccc;
+      }
+
+      .cell.x {
+        color: #3498db;
+      }
+
+      .cell.o {
+        color: #e74c3c;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-top: 0;
+      }
+
+      button {
+        display: block;
+        margin: 0 auto;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #3498db;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .message {
+        text-align: center;
+        color: #333;
+        font-size: 18px;
+      }
+
+      .listening {
+        background-color: #e74c3c; /* Change background color to red when listening */
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tic Tac Toe</h1>
+
+    <div id="board">
+      <!-- Rows with cells -->
+      <div class="row">
+        <div class="cell" data-index="0">Apple</div>
+        <div class="cell" data-index="1">Banana</div>
+        <div class="cell" data-index="2">Orange</div>
+      </div>
+      <div class="row">
+        <div class="cell" data-index="3">Grape</div>
+        <div class="cell" data-index="4">Pineapple</div>
+        <div class="cell" data-index="5">Watermelon</div>
+      </div>
+      <div class="row">
+        <div class="cell" data-index="6">Strawberry</div>
+        <div class="cell" data-index="7">Blueberry</div>
+        <div class="cell" data-index="8">Cherry</div>
+      </div>
+    </div>
+
+    <button id="micButton">Play with Mic</button>
+
+    <div class="message"></div>
+
+    <script>
+      // JavaScript code
+      document.addEventListener("DOMContentLoaded", function () {
+        const cells = document.querySelectorAll(".cell");
+        let currentPlayer = "x";
+        let gameWon = false;
+
+        cells.forEach((cell) => {
+          cell.addEventListener("click", handleCellClick);
+        });
+
+        function handleCellClick(e) {
+          const cell = e.target;
+          if (
+            cell.textContent !== "x" &&
+            cell.textContent !== "o" &&
+            !gameWon
+          ) {
+            cell.textContent = currentPlayer;
+            cell.classList.add(currentPlayer);
+            currentPlayer = currentPlayer === "x" ? "o" : "x";
+            if (currentPlayer === "o") {
+              makeComputerMove();
+            }
+            checkWin();
+          }
+        }
+
+        function makeComputerMove() {
+          const emptyCells = Array.from(cells).filter(
+            (cell) => cell.textContent !== "x" && cell.textContent !== "o"
+          );
+          if (emptyCells.length === 0 || gameWon) {
+            return;
+          }
+          const randomIndex = Math.floor(Math.random() * emptyCells.length);
+          const randomCell = emptyCells[randomIndex];
+          randomCell.textContent = currentPlayer;
+          randomCell.classList.add(currentPlayer);
+          currentPlayer = currentPlayer === "x" ? "o" : "x";
+          checkWin();
+        }
+
+        function checkWin() {
+          const winningCombinations = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8], // rows
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8], // columns
+            [0, 4, 8],
+            [2, 4, 6], // diagonals
+          ];
+
+          for (let combination of winningCombinations) {
+            const [a, b, c] = combination;
+            if (
+              cells[a].textContent !== "" &&
+              cells[a].textContent === cells[b].textContent &&
+              cells[a].textContent === cells[c].textContent
+            ) {
+              gameWon = true;
+              announceWinner(cells[a].textContent);
+              break;
+            }
+          }
+        }
+
+        function announceWinner(player) {
+          const message = `Player ${player} wins!`;
+          setTimeout(function () {
+            document.querySelector(".message").textContent = message;
+          }, 100); // Delay message slightly for better user experience
+        }
+
+        // Speech recognition setup
+        const recognition = new (window.SpeechRecognition ||
+          window.webkitSpeechRecognition ||
+          window.mozSpeechRecognition ||
+          window.msSpeechRecognition)();
+        recognition.lang = "en-US";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = function (event) {
+          const speechResult = event.results[0][0].transcript.toLowerCase();
+          const index = Array.from(cells).findIndex(
+            (cell) => cell.textContent.toLowerCase() === speechResult
+          );
+          if (index !== -1) {
+            handleCellClick({ target: cells[index] });
+          }
+        };
+
+        const micButton = document.querySelector("#micButton");
+
+        micButton.addEventListener("click", () => {
+          if (!recognition.listening) {
+            micButton.classList.add("listening");
+            recognition.start();
+          } else {
+            micButton.classList.remove("listening");
+            recognition.stop();
+          }
+        });
+
+        recognition.onend = function () {
+          micButton.classList.remove("listening");
+        };
+      });
+    </script>
+  </body>
+</html>
